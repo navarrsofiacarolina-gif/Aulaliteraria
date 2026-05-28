@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super LiteraWorld — Sofía Navarro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&family=Press+Start+2P&display=swap');
+
+  :root {
+    --gold: #ffe600;
+    --gold2: #ffb700;
+    --neon-cyan: #00f5ff;
+    --neon-pink: #ff00c8;
+    --neon-green: #39ff14;
+    --neon-purple: #bf00ff;
+    --neon-orange: #ff6a00;
+    --dark: #05050f;
+    --dark2: #0a0a1e;
+    --dark3: #0f0f2e;
+    --card-bg: rgba(0,245,255,0.04);
+    --card-border: rgba(0,245,255,0.2);
+    --white: #e8f4ff;
+    --red: #ff2d55;
+    --green: #39ff14;
+    --blue: #00f5ff;
+    --radius: 16px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.7);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    min-height: 100vh;
+    font-family: 'Exo 2', sans-serif;
+    background: var(--dark);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* Animated scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.07) 2px,
+      rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    animation: scanMove 8s linear infinite;
+  }
+  @keyframes scanMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100px; }
+  }
+
+  /* ===== FLOATING BG ICONS ===== */
+  #bg-float {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .float-icon {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.12;
+    animation: floatUp linear infinite;
+    user-select: none;
+    filter: drop-shadow(0 0 6px var(--neon-cyan));
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.12; }
+    90%  { opacity: 0.12; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== START SCREEN ===== */
+  #screen-start {
+    background:
+      radial-gradient(ellipse at 20% 80%, rgba(191,0,255,0.18) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 10%, rgba(0,245,255,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, #07071a 0%, var(--dark) 100%);
+    align-items: center;
+    padding: 2rem 1rem 3rem;
+  }
+
+  /* Neon grid floor effect on start screen */
+  #screen-start::after {
+    content: '';
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 220px;
+    background:
+      linear-gradient(rgba(0,245,255,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.08) 1px, transparent 1px);
+    background-size: 60px 60px;
+    transform: perspective(400px) rotateX(60deg);
+    transform-origin: bottom;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .mario-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    animation: fadeDown 0.8s ease;
+    position: relative; z-index: 1;
+  }
+  @keyframes fadeDown {
+    from { opacity:0; transform: translateY(-30px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .mario-chars {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 2rem;
+    animation: bounce 1s ease infinite alternate;
+    filter: drop-shadow(0 0 12px var(--neon-cyan));
+  }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+
+  h1.main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2rem, 7vw, 4.5rem);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow:
+      0 0 10px var(--gold),
+      0 0 30px rgba(255,230,0,0.6),
+      0 0 60px rgba(255,230,0,0.3),
+      3px 3px 0 rgba(255,100,0,0.5);
+    letter-spacing: 0.06em;
+    text-align: center;
+    animation: titlePulse 3s ease infinite alternate;
+    position: relative; z-index: 1;
+  }
+  @keyframes titlePulse {
+    from { text-shadow: 0 0 10px var(--gold), 0 0 30px rgba(255,230,0,0.6), 0 0 60px rgba(255,230,0,0.3), 3px 3px 0 rgba(255,100,0,0.5); }
+    to   { text-shadow: 0 0 20px var(--gold), 0 0 50px rgba(255,230,0,0.9), 0 0 90px rgba(255,230,0,0.5), 3px 3px 0 rgba(255,100,0,0.8); }
+  }
+
+  .subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.5rem, 1.5vw, 0.75rem);
+    color: var(--neon-cyan);
+    text-align: center;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.7rem;
+    text-shadow: 0 0 10px var(--neon-cyan);
+    position: relative; z-index: 1;
+  }
+
+  .description {
+    max-width: 600px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: rgba(200,240,255,0.7);
+    margin-bottom: 0.5rem;
+    line-height: 1.7;
+    position: relative; z-index: 1;
+  }
+
+  .author-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--neon-pink);
+    background: rgba(255,0,200,0.08);
+    border: 1px solid rgba(255,0,200,0.4);
+    border-radius: 50px;
+    padding: 0.4rem 1.4rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 10px var(--neon-pink);
+    box-shadow: 0 0 20px rgba(255,0,200,0.15), inset 0 0 20px rgba(255,0,200,0.05);
+    position: relative; z-index: 1;
+  }
+
+  .mario-bar {
+    display: flex;
+    gap: 1rem;
+    background: rgba(0,0,0,0.6);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 12px;
+    padding: 0.6rem 2rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    color: var(--neon-cyan);
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(0,245,255,0.2), inset 0 0 20px rgba(0,245,255,0.04);
+    position: relative; z-index: 1;
+  }
+
+  .worlds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.3rem;
+    max-width: 1000px;
+    width: 100%;
+    margin-bottom: 2rem;
+    position: relative; z-index: 1;
+  }
+
+  .world-card {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+  }
+  .world-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--wc-grad, transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+  }
+  /* Animated border glow on hover */
+  .world-card::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: calc(var(--radius) + 2px);
+    background: conic-gradient(from 0deg, var(--neon-cyan), var(--neon-pink), var(--gold), var(--neon-green), var(--neon-cyan));
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+    animation: borderSpin 3s linear infinite;
+  }
+  @keyframes borderSpin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+  .world-card:hover::before { opacity: 1; }
+  .world-card:hover::after { opacity: 1; }
+  .world-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,245,255,0.2);
+    border-color: transparent;
+  }
+
+  .world-card .wc-icon {
+    font-size: 2.8rem; margin-bottom: 0.6rem; display: block;
+    filter: drop-shadow(0 0 8px currentColor);
+    transition: transform 0.2s;
+  }
+  .world-card:hover .wc-icon { transform: scale(1.15) rotate(-5deg); }
+  .world-card .wc-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.52rem;
+    color: var(--wc-color, var(--neon-cyan));
+    background: rgba(0,0,0,0.4);
+    border-radius: 4px;
+    padding: 2px 7px;
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    text-shadow: 0 0 8px currentColor;
+  }
+  .world-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+  .world-card p {
+    font-size: 0.82rem;
+    color: rgba(200,230,255,0.65);
+    line-height: 1.5;
+  }
+  .world-card .wc-stars {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    font-size: 0.7rem;
+    color: var(--gold);
+    text-shadow: 0 0 8px var(--gold);
+  }
+
+  .btn-sound {
+    background: rgba(0,245,255,0.1);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 0.55rem 1.4rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    transition: background 0.2s, box-shadow 0.2s;
+    text-shadow: 0 0 8px var(--neon-cyan);
+  }
+  .btn-sound:hover {
+    background: rgba(0,245,255,0.2);
+    box-shadow: 0 0 20px rgba(0,245,255,0.3);
+  }
+
+  /* ===== LESSON SCREEN ===== */
+  #screen-lesson {
+    background:
+      radial-gradient(ellipse at 10% 20%, rgba(191,0,255,0.12), transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(0,245,255,0.1), transparent 50%),
+      var(--dark2);
+    padding: 2rem 1.5rem 3rem;
+    align-items: center;
+  }
+  .lesson-header {
+    text-align: center;
+    max-width: 700px;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    animation: fadeDown 0.6s ease;
+  }
+  .lesson-header .big-icon {
+    font-size: 4.5rem; margin-bottom: 0.5rem; display: block;
+    filter: drop-shadow(0 0 16px var(--neon-cyan));
+    animation: iconFloat 2s ease infinite alternate;
+  }
+  @keyframes iconFloat {
+    from { transform: translateY(0) scale(1); }
+    to   { transform: translateY(-8px) scale(1.05); }
+  }
+  .lesson-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.3rem, 4vw, 2rem);
+    font-weight: 700;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 20px rgba(0,245,255,0.6);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.05em;
+  }
+  .lesson-header .theme-tag {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    background: rgba(191,0,255,0.12);
+    border: 1px solid rgba(191,0,255,0.4);
+    border-radius: 50px;
+    padding: 0.3rem 1rem;
+    color: var(--neon-purple);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 8px var(--neon-purple);
+  }
+
+  .lesson-key {
+    background: linear-gradient(135deg, rgba(0,245,255,0.07), rgba(0,245,255,0.02));
+    border-left: 4px solid var(--neon-cyan);
+    border-radius: 0 14px 14px 0;
+    padding: 1rem 1.5rem;
+    margin: 1.2rem 0;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: -4px 0 20px rgba(0,245,255,0.15);
+  }
+  .lesson-key .key-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.52rem;
+    color: var(--neon-cyan);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.4rem;
+    text-shadow: 0 0 8px var(--neon-cyan);
+  }
+  .lesson-key p { font-size: 0.95rem; line-height: 1.7; color: rgba(200,240,255,0.9); }
+
+  .lesson-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    max-width: 700px;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  .lesson-concept {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: 12px;
+    padding: 1rem;
+    backdrop-filter: blur(6px);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .lesson-concept:hover {
+    transform: translateY(-4px);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0,245,255,0.15);
+  }
+  .lesson-concept .con-icon {
+    font-size: 1.6rem; margin-bottom: 0.4rem; display: block;
+    filter: drop-shadow(0 0 6px var(--neon-cyan));
+  }
+  .lesson-concept strong {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    color: var(--gold);
+    text-shadow: 0 0 8px rgba(255,230,0,0.4);
+    display: block;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.03em;
+  }
+  .lesson-concept span { font-size: 0.83rem; color: rgba(200,230,255,0.7); line-height: 1.5; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--neon-cyan), #0080ff);
+    color: #000;
+    border: none;
+    padding: 0.9rem 2.8rem;
+    border-radius: 50px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(0,245,255,0.35), 0 0 40px rgba(0,245,255,0.15);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .btn-primary:hover {
+    transform: scale(1.07) translateY(-2px);
+    box-shadow: 0 8px 35px rgba(0,245,255,0.6), 0 0 60px rgba(0,245,255,0.25);
+  }
+
+  .btn-back {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    padding: 0.5rem 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.85rem;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-back:hover {
+    background: rgba(0,245,255,0.08);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #screen-game {
+    background:
+      radial-gradient(ellipse at 70% 100%, var(--game-bg1, #001a2a), transparent 60%),
+      radial-gradient(ellipse at 0% 0%, rgba(191,0,255,0.1), transparent 40%),
+      var(--dark);
+    padding: 1rem 1.5rem 2rem;
+    align-items: center;
+  }
+  .game-topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+    max-width: 780px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+  }
+  .game-topbar .world-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    flex: 1;
+    min-width: 140px;
+    text-shadow: 0 0 8px var(--neon-cyan);
+    letter-spacing: 0.05em;
+  }
+  .stat-chip {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.52rem;
+    padding: 0.38rem 0.8rem;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .chip-score {
+    background: rgba(255,230,0,0.08);
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    text-shadow: 0 0 8px var(--gold);
+    box-shadow: 0 0 10px rgba(255,230,0,0.1);
+  }
+  .chip-lives {
+    background: rgba(255,45,85,0.1);
+    color: var(--red);
+    border: 1px solid var(--red);
+    text-shadow: 0 0 8px var(--red);
+    box-shadow: 0 0 10px rgba(255,45,85,0.1);
+  }
+  .chip-level {
+    background: rgba(0,245,255,0.08);
+    color: var(--neon-cyan);
+    border: 1px solid var(--neon-cyan);
+    text-shadow: 0 0 8px var(--neon-cyan);
+  }
+
+  .progress-wrap { width: 100%; max-width: 780px; margin-bottom: 0.6rem; }
+  .progress-label { display: flex; justify-content: space-between; font-family: 'Press Start 2P', monospace; font-size: 0.45rem; color: rgba(200,240,255,0.4); margin-bottom: 0.3rem; }
+  .progress-bar-bg { height: 8px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,245,255,0.1); }
+  .progress-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)); transition: width 0.5s ease; box-shadow: 0 0 10px rgba(0,245,255,0.5); }
+
+  .timer-wrap { width: 100%; max-width: 780px; margin-bottom: 1rem; }
+  .timer-bar-bg { height: 7px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+  .timer-bar-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.5s linear, background 0.5s; box-shadow: 0 0 8px currentColor; }
+  .timer-label { font-family: 'Press Start 2P', monospace; font-size: 0.52rem; color: rgba(200,240,255,0.5); margin-top: 0.25rem; text-align: right; }
+
+  .game-card {
+    background: rgba(5,5,25,0.85);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    max-width: 780px;
+    width: 100%;
+    backdrop-filter: blur(8px);
+    animation: fadeUp 0.5s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(0,245,255,0.07);
+  }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+  .mission-tag {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.48rem;
+    color: var(--neon-pink);
+    background: rgba(255,0,200,0.08);
+    border: 1px solid rgba(255,0,200,0.3);
+    border-radius: 4px;
+    padding: 3px 9px;
+    display: inline-block;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 8px var(--neon-pink);
+  }
+  .fragment-box {
+    background: rgba(0,0,0,0.45);
+    border-left: 3px solid var(--neon-cyan);
+    border-radius: 0 10px 10px 0;
+    padding: 0.9rem 1.2rem;
+    margin: 0.8rem 0;
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: rgba(200,240,255,0.9);
+    box-shadow: -3px 0 15px rgba(0,245,255,0.1);
+  }
+  .hint-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    background: rgba(191,0,255,0.07);
+    border: 1px solid rgba(191,0,255,0.25);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: rgba(220,200,255,0.8);
+    margin-bottom: 0.8rem;
+  }
+  .hint-box .hint-icon { font-size: 1rem; flex-shrink: 0; }
+  .question-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(0.8rem, 2.3vw, 1rem);
+    color: var(--white);
+    margin-bottom: 1.2rem;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+  }
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 520px) { .options-grid { grid-template-columns: 1fr; } }
+
+  .opt-btn {
+    background: rgba(0,245,255,0.04);
+    border: 1px solid rgba(0,245,255,0.2);
+    color: var(--white);
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9rem;
+    font-family: 'Exo 2', sans-serif;
+    line-height: 1.4;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  }
+  .opt-btn:hover:not(:disabled) {
+    background: rgba(0,245,255,0.1);
+    border-color: var(--neon-cyan);
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(0,245,255,0.15);
+  }
+  .opt-btn.correct {
+    background: rgba(57,255,20,0.12) !important;
+    border-color: var(--neon-green) !important;
+    color: #a8ffb3 !important;
+    box-shadow: 0 0 20px rgba(57,255,20,0.2) !important;
+    text-shadow: 0 0 8px rgba(57,255,20,0.4);
+  }
+  .opt-btn.wrong   { background: rgba(255,45,85,0.15)  !important; border-color: var(--red) !important; color: #ffb3b3 !important; box-shadow: 0 0 15px rgba(255,45,85,0.15) !important; }
+  .opt-btn:disabled { cursor: default; }
+
+  /* ===== FEEDBACK MODAL ===== */
+  #modal-feedback {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0,0,5,0.85);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+  }
+  #modal-feedback.open { display: flex; }
+  .modal-box {
+    background: linear-gradient(135deg, #080820, #0c0c30);
+    border: 2px solid var(--neon-cyan);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    animation: popIn 0.35s cubic-bezier(.17,.67,.35,1.4);
+    box-shadow: 0 0 60px rgba(0,245,255,0.2), 0 20px 60px rgba(0,0,0,0.8);
+  }
+  @keyframes popIn { from { transform: scale(0.6) rotate(-3deg); opacity:0; } to { transform: scale(1) rotate(0deg); opacity:1; } }
+  .modal-box .modal-icon {
+    font-size: 4rem; margin-bottom: 0.5rem; display: block;
+    animation: iconPop 0.5s ease;
+  }
+  @keyframes iconPop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .modal-box h3 { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; margin-bottom: 0.5rem; font-weight: 700; letter-spacing: 0.05em; }
+  .modal-box .modal-correct { color: var(--neon-green); text-shadow: 0 0 20px rgba(57,255,20,0.6); }
+  .modal-box .modal-wrong   { color: var(--red); text-shadow: 0 0 20px rgba(255,45,85,0.6); }
+  .modal-box .modal-exp { font-size: 0.9rem; color: rgba(200,230,255,0.8); line-height: 1.6; margin-bottom: 0.8rem; }
+  .modal-box .modal-remember {
+    background: rgba(255,230,0,0.06);
+    border: 1px solid rgba(255,230,0,0.2);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    font-size: 0.83rem;
+    color: rgba(255,230,150,0.7);
+    margin-bottom: 1.2rem;
+    font-style: italic;
+  }
+
+  /* ===== GAMEOVER / WIN SCREEN ===== */
+  #screen-end {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(191,0,255,0.2), transparent 60%),
+      radial-gradient(ellipse at 50% 80%, rgba(0,245,255,0.12), transparent 50%),
+      var(--dark);
+  }
+  #screen-end .end-icon {
+    font-size: 5rem; margin-bottom: 1rem; display: block;
+    animation: bounce 0.8s ease infinite alternate;
+    filter: drop-shadow(0 0 20px var(--gold));
+  }
+  #screen-end h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255,230,0,0.6);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  #screen-end p { font-size: 1.05rem; color: rgba(200,230,255,0.7); margin-bottom: 1.5rem; }
+  .end-stats { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap; }
+  .end-stat {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 0 20px rgba(0,245,255,0.08);
+  }
+  .end-stat span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.48rem;
+    color: rgba(200,230,255,0.45);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+  .end-stat strong { font-size: 1.5rem; color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; text-shadow: 0 0 12px var(--neon-cyan); }
+
+  /* ===== CONFETTI ===== */
+  #confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+  .conf { position: absolute; width: 10px; height: 10px; border-radius: 2px; opacity: 0; animation: confFall 1.2s ease forwards; }
+  @keyframes confFall {
+    0%   { opacity: 1; transform: translateY(-10px) rotate(0deg) scale(1); }
+    100% { opacity: 0; transform: translateY(80vh) rotate(720deg) scale(0.3); }
+  }
+
+  /* ===== MISC ===== */
+  .flex-center { display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .divider { height: 1px; background: rgba(0,245,255,0.1); width: 100%; max-width: 700px; margin: 1rem 0; }
+
+  #lives-display { font-size: 0.9rem; }
+
+  .remember-box {
+    background: rgba(191,0,255,0.06);
+    border: 1px dashed rgba(191,0,255,0.25);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    color: rgba(210,190,255,0.65);
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+
+  .pixelart {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+  }
+
+  .goal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    color: rgba(0,245,255,0.6);
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating BG -->
+<div id="bg-float"></div>
+
+<!-- Confetti -->
+<div id="confetti-container"></div>
+
+<!-- Feedback Modal -->
+<div id="modal-feedback">
+  <div class="modal-box">
+    <span class="modal-icon" id="modal-icon">⭐</span>
+    <h3 id="modal-title" class="modal-correct">¡Correcto!</h3>
+    <p class="modal-exp" id="modal-exp"></p>
+    <div class="modal-remember" id="modal-remember"></div>
+    <div class="flex-center">
+      <button class="btn-primary" id="btn-next-level" onclick="nextLevel()">⭐ Siguiente nivel ▶</button>
+      <button class="btn-back" id="btn-retry" onclick="retryLevel()" style="display:none">🍄 Reintentar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: START ==================== -->
+<div id="screen-start" class="screen active">
+  <div class="mario-header">
+    <div class="mario-chars" id="mario-walk">🍄⭐🪙🌟</div>
+  </div>
+  <h1 class="main-title">Super LiteraWorld</h1>
+  <p class="subtitle">★ WORLD 1-1 · AVENTURA LITERARIA ★</p>
+  <p class="description">¡Bienvenido, jugador! Ayuda a Mario a rescatar la literatura: explora 6 mundos, derrota a Bowser con tus conocimientos literarios y salva el Reino de los Textos.</p>
+  <div class="author-badge">🍄 Por Sofía Navarro</div>
+
+  <div class="mario-bar">
+    <span id="hud-score">🪙 MONEDAS: 0</span>
+    <span id="hud-lives">❤️ VIDAS: 3</span>
+    <span id="hud-world">🗺️ MUNDO: —</span>
+    <button class="btn-sound" onclick="toggleSound()" id="btn-sound-main">🔊 Sonido: ON</button>
+  </div>
+
+  <div class="worlds-grid" id="worlds-grid"></div>
+
+  <p style="font-size:0.75rem; color:rgba(200,240,255,0.35); margin-top:1rem; font-family:'Press Start 2P',monospace;">PRESS START · ELIGE UN MUNDO 🍄</p>
+</div>
+
+<!-- ==================== SCREEN: LESSON ==================== -->
+<div id="screen-lesson" class="screen">
+  <button class="btn-back" onclick="showStart()" style="align-self:flex-start; margin-bottom:1rem;">🍄 ← Volver al mapa</button>
+  <div class="lesson-header" id="lesson-header"></div>
+  <div class="lesson-key" id="lesson-key"></div>
+  <div class="lesson-cards" id="lesson-cards"></div>
+  <button class="btn-primary" id="btn-start-game" onclick="startGame()">⭐ ¡Entrar al castillo! 🏰</button>
+</div>
+
+<!-- ==================== SCREEN: GAME ==================== -->
+<div id="screen-game" class="screen">
+  <div class="game-topbar">
+    <span class="world-label" id="game-world-label">🗺️ Mundo</span>
+    <span class="stat-chip chip-level pixelart" id="chip-level">NVL 1/5</span>
+    <span class="stat-chip chip-score pixelart" id="chip-score">🪙 0</span>
+    <span class="stat-chip chip-lives" id="chip-lives">❤️ ❤️ ❤️</span>
+    <button class="btn-back" style="font-size:0.75rem; padding:0.35rem 0.8rem;" onclick="toggleSound()">🔊</button>
+    <button class="btn-back" style="font-size:0.75rem; padding:0.35rem 0.8rem;" onclick="showStart()">🗺️</button>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Progreso</span><span id="progress-text">0 / 5</span></div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div class="timer-wrap">
+    <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-fill" style="width:100%"></div></div>
+    <div class="timer-label" id="timer-label">⏱ 25s</div>
+  </div>
+  <div class="game-card" id="game-card">
+    <!-- Level content injected here -->
+  </div>
+</div>
+
+<!-- ==================== SCREEN: END ==================== -->
+<div id="screen-end" class="screen">
+  <span class="end-icon" id="end-icon">🏆</span>
+  <h2 id="end-title">¡Misión completada!</h2>
+  <p id="end-msg">Has demostrado ser un verdadero explorador literario.</p>
+  <div class="end-stats">
+    <div class="end-stat"><span>PUNTAJE FINAL</span><strong id="end-score">0</strong></div>
+    <div class="end-stat"><span>NIVELES</span><strong id="end-levels">0/5</strong></div>
+    <div class="end-stat"><span>ESTRELLA</span><strong id="end-star">⭐</strong></div>
+  </div>
+  <div class="flex-center">
+    <button class="btn-primary" onclick="showStart()">🗺️ Mapa del Reino</button>
+    <button class="btn-back" onclick="replayWorld()">🔄 Reintentar mundo</button>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// DATA: 6 WORLDS × 5+ LEVELS
+// =====================================================
+const WORLDS = [
+  {
+    id: 0,
+    icon: '🍄',
+    name: 'Reino del Champiñón',
+    tag: 'WORLD 1-1',
+    theme: 'Géneros literarios y comprensión general',
+    color: '#4a6fa5',
+    gradStart: '#0d1b2e',
+    gradEnd: '#0d0d1a',
+    grad: 'rgba(74,111,165,0.12)',
+    lessonTitle: 'Los Géneros Literarios',
+    lessonIntro: 'La literatura se organiza en grandes géneros según su forma y propósito. Conocer estos géneros te permite leer y comprender mejor cualquier texto.',
+    keyLabel: 'CLAVE DIDÁCTICA',
+    keyText: 'Un género literario es la categoría que agrupa obras con características similares en cuanto a forma, contenido y estilo. Los tres grandes géneros son: narrativo, lírico y dramático.',
+    concepts: [
+      { icon:'📖', name:'Género Narrativo', desc:'Cuenta historias mediante un narrador. Incluye novelas, cuentos, fábulas y leyendas.' },
+      { icon:'🎭', name:'Género Dramático', desc:'Escrito para ser representado en teatro. Incluye comedias, tragedias y dramas.' },
+      { icon:'🎵', name:'Género Lírico', desc:'Expresa sentimientos y emociones. El poema es su forma más común.' },
+      { icon:'🌟', name:'Subgéneros', desc:'Cada género tiene subdivisiones: el cuento, la novela, el poema épico, etc.' }
+    ],
+    levels: [
+      {
+        mission: '🗺️ Misión 1: Identifica el género',
+        fragment: '"La princesa dormía en la torre. El viento silbaba entre los álamos cuando el joven caballero cruzó el puente levadizo con paso decidido."',
+        hint: '💡 Pista: Hay personajes, un narrador y una historia que se cuenta.',
+        question: '¿A qué género literario pertenece este fragmento?',
+        options: ['Género lírico', 'Género narrativo', 'Género dramático', 'Género epistolar'],
+        correct: 1,
+        explanation: '¡Exacto! El fragmento pertenece al género narrativo porque cuenta una historia mediante un narrador y presenta personajes en acción.',
+        remember: 'El género narrativo siempre tiene un narrador que cuenta los hechos.',
+        goal: 'Reconocer características del género narrativo'
+      },
+      {
+        mission: '🗺️ Misión 2: ¡Teatro o no!',
+        fragment: 'ELENA: ¿Qué haces aquí a estas horas?\nLUIS: (nervioso) Vine a devolverte el libro.\nELENA: Podría haber esperado hasta mañana...',
+        hint: '💡 Pista: Observa cómo está escrito: hay nombres de personajes y acotaciones.',
+        question: '¿Cuál es la característica principal que indica que este fragmento es teatral?',
+        options: ['Tiene rima y ritmo', 'Los personajes hablan directamente y hay acotaciones', 'Es narrado por un personaje', 'Describe paisajes bellos'],
+        correct: 1,
+        explanation: 'Correcto. El género dramático se reconoce porque los personajes hablan directamente (diálogos) y aparecen acotaciones entre paréntesis que indican gestos o acciones.',
+        remember: 'En el teatro no hay narrador: los personajes hablan por sí mismos.',
+        goal: 'Identificar características del género dramático'
+      },
+      {
+        mission: '🗺️ Misión 3: El poema habla',
+        fragment: '"Tus ojos son dos estrellas\nque guían mi corazón perdido,\ndos luces en la noche bella\nque me llevan a tu nido."',
+        hint: '💡 Pista: Fíjate en la estructura, los versos y lo que expresa.',
+        question: '¿Qué elemento confirma que estamos ante un texto lírico?',
+        options: ['Tiene muchos personajes', 'Expresa emociones en versos con musicalidad y rima', 'Cuenta una historia de aventuras', 'Está escrito en forma de diálogo'],
+        correct: 1,
+        explanation: '¡Muy bien! El género lírico se caracteriza por expresar sentimientos y emociones. Sus textos están escritos en versos con rima y musicalidad.',
+        remember: 'Lírico viene de "lira", el instrumento con que se acompañaban los poemas en la antigüedad.',
+        goal: 'Reconocer características del género lírico'
+      },
+      {
+        mission: '🗺️ Misión 4: Subgéneros',
+        fragment: 'Una cigarra cantaba todo el verano mientras la hormiga trabajaba sin descanso. Al llegar el invierno, la cigarra pidió comida a la hormiga, pero esta le respondió: "Quien no trabaja en verano, no come en invierno."',
+        hint: '💡 Pista: Es una historia muy corta con una enseñanza moral al final.',
+        question: '¿Qué subgénero narrativo es este texto?',
+        options: ['Novela de aventuras', 'Cuento de terror', 'Fábula', 'Leyenda urbana'],
+        correct: 2,
+        explanation: '¡Excelente! Es una fábula porque tiene personajes animales que actúan como humanos y transmite una moraleja o enseñanza. Esta es la famosa fábula de Esopo.',
+        remember: 'Las fábulas tienen siempre una moraleja: una enseñanza de vida.',
+        goal: 'Diferenciar subgéneros narrativos'
+      },
+      {
+        mission: '🗺️ Misión 5: El gran reto',
+        fragment: 'El texto habla de un viaje imaginario a un planeta lejano donde los habitantes son seres de luz. El narrador describe cada lugar con detalle y los personajes viven aventuras increíbles a lo largo de 300 páginas.',
+        hint: '💡 Pista: Es una obra extensa, con narrador, personajes y muchas aventuras.',
+        question: '¿Cuál es el subgénero más adecuado para este texto?',
+        options: ['Soneto', 'Novela de ciencia ficción', 'Comedia teatral', 'Poema épico'],
+        correct: 1,
+        explanation: '¡Perfecto! Una obra larga, con narrador, personajes y aventuras en un mundo futurista o fantástico corresponde a una novela, en este caso de ciencia ficción.',
+        remember: 'La novela es el subgénero narrativo más extenso y complejo.',
+        goal: 'Clasificar correctamente subgéneros narrativos extensos'
+      }
+    ]
+  },
+  {
+    id: 1,
+    icon: '🌿',
+    name: 'Tierra de Yoshi',
+    tag: 'WORLD 2-1',
+    theme: 'Inicio, nudo y desenlace',
+    color: '#c8a96e',
+    gradStart: '#1a1200',
+    gradEnd: '#0d0d1a',
+    grad: 'rgba(200,169,110,0.12)',
+    lessonTitle: 'Estructura del Cuento',
+    lessonIntro: 'Todo cuento tiene tres partes fundamentales que forman su estructura. Conocerlas te ayuda a comprender y analizar cualquier texto narrativo.',
+    keyLabel: 'CLAVE DIDÁCTICA',
+    keyText: 'La estructura ternaria del cuento es: INICIO (presentación de personajes y situación), NUDO (conflicto o problema que complica la historia) y DESENLACE (solución o final).',
+    concepts: [
+      { icon:'🌅', name:'Inicio', desc:'Presenta personajes, lugar y tiempo. Aquí comienza la historia de manera tranquila.' },
+      { icon:'⚡', name:'Nudo', desc:'El conflicto o problema que altera la situación inicial. Es la parte más emocionante.' },
+      { icon:'🌈', name:'Desenlace', desc:'Resolución del conflicto. Puede ser feliz, triste o abierto.' },
+      { icon:'🔗', name:'Coherencia', desc:'Las tres partes deben estar conectadas de manera lógica y ordenada.' }
+    ],
+    levels: [
+      {
+        mission: '📜 Misión 1: El comienzo',
+        fragment: '"En un pequeño pueblo entre montañas vivía una niña llamada Clara. Tenía diez años, el cabello negro y una curiosidad infinita. Cada mañana miraba desde su ventana el bosque oscuro que nadie se atrevía a cruzar."',
+        hint: '💡 Pista: ¿Qué parte presenta a los personajes y el lugar de la historia?',
+        question: '¿A qué parte de la estructura corresponde este fragmento?',
+        options: ['Nudo', 'Desenlace', 'Inicio', 'Clímax'],
+        correct: 2,
+        explanation: '¡Correcto! Es el inicio del cuento porque presenta a la protagonista (Clara), su descripción, el lugar (pueblo entre montañas) y una situación inicial tranquila.',
+        remember: 'El inicio responde a: ¿quién?, ¿dónde? y ¿cuándo? de la historia.',
+        goal: 'Identificar el inicio de un cuento'
+      },
+      {
+        mission: '📜 Misión 2: El conflicto',
+        fragment: '"Un día, Clara escuchó llantos dentro del bosque. Sin pensarlo, entró. Pronto se perdió entre los árboles gigantes. Las sombras crecían y el camino de vuelta había desaparecido. Nadie sabía dónde estaba."',
+        hint: '💡 Pista: ¿Qué situación rompe la tranquilidad inicial del cuento?',
+        question: '¿Qué parte de la estructura representa este fragmento?',
+        options: ['Inicio', 'Desenlace', 'Moraleja', 'Nudo'],
+        correct: 3,
+        explanation: '¡Excelente! Es el nudo: el conflicto que complica la historia. Clara se pierde en el bosque, lo que genera tensión y el problema que habrá que resolver.',
+        remember: 'El nudo es el corazón del cuento: sin conflicto no hay historia.',
+        goal: 'Identificar el nudo o conflicto narrativo'
+      },
+      {
+        mission: '📜 Misión 3: La resolución',
+        fragment: '"Siguiendo el sonido del río, Clara encontró una salida al bosque justo cuando el sol se ponía. Su familia la abrazó entre lágrimas de alivio. Desde ese día, Clara aprendió que la valentía y la calma son las mejores guías."',
+        hint: '💡 Pista: El problema se resuelve y la historia llega a su fin.',
+        question: '¿Qué elemento de la estructura narrativa aparece en este fragmento?',
+        options: ['Inicio del conflicto', 'Nudo complicado', 'Desenlace o resolución', 'Presentación de personajes'],
+        correct: 2,
+        explanation: 'Perfecto. Es el desenlace: Clara encuentra la salida, el conflicto se resuelve y la historia termina con una enseñanza. El desenlace cierra la historia.',
+        remember: 'El desenlace da cierre al conflicto planteado en el nudo.',
+        goal: 'Reconocer el desenlace del cuento'
+      },
+      {
+        mission: '📜 Misión 4: Ordena la historia',
+        fragment: 'A) "Tomás encontró el perrito en el parque y lo llevó a casa felizmente." — B) "Tomás era un niño que siempre quiso tener un perro." — C) "Sus padres dijeron que no, así que Tomás estaba muy triste."',
+        hint: '💡 Pista: Piensa cuál es la situación inicial, cuál el problema y cuál la solución.',
+        question: '¿Cuál es el orden correcto de inicio, nudo y desenlace?',
+        options: ['A - B - C', 'C - A - B', 'B - C - A', 'A - C - B'],
+        correct: 2,
+        explanation: '¡Así es! B es el inicio (presenta a Tomás y su deseo), C es el nudo (el conflicto: sus padres dicen que no) y A es el desenlace (encuentra el perrito).',
+        remember: 'El orden lógico siempre es: situación estable → conflicto → resolución.',
+        goal: 'Ordenar correctamente las partes del cuento'
+      },
+      {
+        mission: '📜 Misión 5: El cuento completo',
+        fragment: 'Sofía tenía miedo a la oscuridad. Una noche, la luz se fue. Asustada, buscó a tientas su linterna. Al encenderla, vio que solo era una tormenta y sonrió. Desde entonces, guardaba siempre pilas de repuesto.',
+        hint: '💡 Pista: ¿Cuántas partes tiene esta historia? ¿Puedes identificar cada una?',
+        question: '¿Cuál es el NUDO de este cuento?',
+        options: ['Sofía tenía miedo a la oscuridad', 'La luz se fue y Sofía buscó su linterna asustada', 'Sofía vio que era solo una tormenta', 'Desde entonces guardaba pilas'],
+        correct: 1,
+        explanation: '¡Correcto! El nudo es cuando la luz se va y Sofía, asustada, debe buscar su linterna a oscuras. Ese es el conflicto central que mueve la historia.',
+        remember: 'El nudo es el momento de mayor tensión o dificultad en la historia.',
+        goal: 'Analizar las tres partes en un cuento completo'
+      }
+    ]
+  },
+  {
+    id: 2,
+    icon: '⭐',
+    name: 'Galaxia de Estrellas',
+    tag: 'WORLD 3-1',
+    theme: 'Secuencias y orden narrativo',
+    color: '#c678a8',
+    gradStart: '#1a0d1a',
+    gradEnd: '#0d0d1a',
+    grad: 'rgba(198,120,168,0.12)',
+    lessonTitle: 'El Orden de los Hechos',
+    lessonIntro: 'En toda narración los hechos ocurren en un orden. Entender la secuencia narrativa te permite comprender la historia y analizar cómo está construida.',
+    keyLabel: 'CLAVE DIDÁCTICA',
+    keyText: 'La secuencia narrativa es el orden en que se presentan los hechos. Puede ser cronológica (de primero a último) o alterada (con flashbacks o anticipaciones). Las palabras clave de secuencia son: primero, luego, después, finalmente, antes, mientras tanto, al día siguiente.',
+    concepts: [
+      { icon:'1️⃣', name:'Orden cronológico', desc:'Los hechos se narran en el orden en que ocurrieron: de primero a último.' },
+      { icon:'⏪', name:'Flashback', desc:'El narrador regresa al pasado para contar algo que ocurrió antes.' },
+      { icon:'🔗', name:'Conectores', desc:'Palabras como "luego", "después", "finalmente" indican el orden.' },
+      { icon:'🔀', name:'Orden alterado', desc:'A veces el narrador mezcla el orden para generar suspenso o interés.' }
+    ],
+    levels: [
+      {
+        mission: '🗺️ Misión 1: El primer hecho',
+        fragment: '"Primero, Ana se despertó tarde. Luego, se vistió corriendo. Después, tomó su mochila sin desayunar. Finalmente, llegó al colegio justo a tiempo."',
+        hint: '💡 Pista: Las palabras "primero", "luego", "después" te indican el orden.',
+        question: '¿Qué hecho ocurre EN TERCER LUGAR según el orden del texto?',
+        options: ['Ana se despertó tarde', 'Ana llegó al colegio', 'Ana tomó su mochila sin desayunar', 'Ana se vistió corriendo'],
+        correct: 2,
+        explanation: '¡Correcto! El orden es: 1) Se despertó tarde, 2) Se vistió corriendo, 3) Tomó su mochila sin desayunar, 4) Llegó al colegio. El tercer hecho es tomar la mochila.',
+        remember: 'Los conectores temporales marcan el orden: primero, luego, después, finalmente.',
+        goal: 'Identificar el orden cronológico de los hechos'
+      },
+      {
+        mission: '🗺️ Misión 2: ¿Qué pasó antes?',
+        fragment: '"Pedro ganó el campeonato de ajedrez. El día anterior había estudiado todas las aperturas posibles. Semanas antes, su entrenador le había enseñado la técnica del gambito."',
+        hint: '💡 Pista: "El día anterior" y "semanas antes" indican tiempo pasado respecto al primer hecho.',
+        question: '¿Cuál fue el PRIMER hecho que ocurrió cronológicamente?',
+        options: ['Pedro ganó el campeonato', 'Pedro estudió las aperturas', 'El entrenador le enseñó el gambito', 'Pedro jugó contra un rival difícil'],
+        correct: 2,
+        explanation: 'Muy bien. Aunque el texto empieza con el campeonato, cronológicamente lo primero fue que el entrenador le enseñó el gambito (semanas antes), luego estudió las aperturas (día anterior) y finalmente ganó.',
+        remember: 'El orden del texto no siempre coincide con el orden cronológico real.',
+        goal: 'Reconstruir el orden cronológico real de los hechos'
+      },
+      {
+        mission: '🗺️ Misión 3: Conecta los hechos',
+        fragment: '"____, la tormenta comenzó con fuerza. Los niños corrían a refugiarse. ____, cayó un rayo cerca. Todos gritaron asustados. ____, llegaron los padres y todo volvió a la calma."',
+        hint: '💡 Pista: Necesitas conectores de secuencia temporal para llenar los espacios.',
+        question: '¿Qué conjunto de conectores completa mejor el texto en orden?',
+        options: ['Finalmente - Luego - Primero', 'Primero - Luego - Finalmente', 'Después - Antes - Durante', 'Mientras - Nunca - Siempre'],
+        correct: 1,
+        explanation: '¡Excelente! "Primero" inicia la secuencia, "Luego" indica el siguiente hecho y "Finalmente" cierra la narración. Es el orden lógico y cronológico correcto.',
+        remember: 'Primero → Luego → Finalmente es la cadena básica de una secuencia.',
+        goal: 'Usar conectores para establecer secuencia narrativa'
+      },
+      {
+        mission: '🗺️ Misión 4: El hecho central',
+        fragment: '"La familia preparó todo para el viaje. Empacaron maletas, compraron provisiones y revisaron el auto. Sin embargo, al llegar al aeropuerto descubrieron que habían dejado los pasaportes en casa. Tuvieron que regresar a buscarlos."',
+        hint: '💡 Pista: ¿Cuál es el hecho que interrumpe o cambia el curso de la historia?',
+        question: '¿Qué hecho INTERRUMPE el plan original de la familia?',
+        options: ['Preparar maletas', 'Comprar provisiones', 'Olvidar los pasaportes', 'Revisar el auto'],
+        correct: 2,
+        explanation: 'Correcto. El hecho que interrumpe y cambia el rumbo es descubrir que olvidaron los pasaportes. Este hecho altera la secuencia prevista y genera un nuevo conflicto.',
+        remember: 'En toda secuencia hay hechos que alteran o interrumpen el curso normal.',
+        goal: 'Identificar hechos que alteran la secuencia narrativa'
+      },
+      {
+        mission: '🗺️ Misión 5: El flashback',
+        fragment: '"Laura miraba el viejo árbol del jardín. De repente, recordó cómo, años atrás, su abuelo le había enseñado a trepar por sus ramas. Aquellas tardes de infancia eran el mejor recuerdo de su vida."',
+        hint: '💡 Pista: El narrador hace que la historia "viaje" al pasado.',
+        question: '¿Qué recurso narrativo se usa en este fragmento?',
+        options: ['Orden cronológico normal', 'Anticipación o prolepsis', 'Flashback o analepsis', 'Monólogo interior'],
+        correct: 2,
+        explanation: '¡Perfecto! Un flashback (o analepsis) es cuando el narrador interrumpe la historia presente para recordar o narrar algo del pasado. Laura recuerda su infancia desde el presente.',
+        remember: 'El flashback lleva la narración al pasado; la prolepsis la lleva al futuro.',
+        goal: 'Reconocer el recurso del flashback en una narración'
+      }
+    ]
+  },
+  {
+    id: 3,
+    icon: '🔎',
+    name: 'Mansión de Boo',
+    tag: 'WORLD 4-1',
+    theme: 'Comprensión lectora e inferencias',
+    color: '#4ecdc4',
+    gradStart: '#0a1a1a',
+    gradEnd: '#0d0d1a',
+    grad: 'rgba(78,205,196,0.12)',
+    lessonTitle: 'El Arte de la Inferencia',
+    lessonIntro: 'Un buen lector no solo entiende lo que dice el texto, sino que también descubre lo que no dice explícitamente. Leer entre líneas es una habilidad esencial.',
+    keyLabel: 'CLAVE DIDÁCTICA',
+    keyText: 'La inferencia es la capacidad de deducir información que no está escrita directamente en el texto, pero que se puede comprender a través de pistas, contexto y lógica. Hay tres niveles de lectura: literal (lo que dice), inferencial (lo que sugiere) y crítico (lo que opina el lector).',
+    concepts: [
+      { icon:'📝', name:'Lectura literal', desc:'Comprende exactamente lo que dice el texto, sin interpretaciones.' },
+      { icon:'🔎', name:'Lectura inferencial', desc:'Deduce lo que el texto sugiere pero no dice explícitamente.' },
+      { icon:'💭', name:'Lectura crítica', desc:'El lector evalúa, cuestiona y opina sobre el texto.' },
+      { icon:'🧩', name:'Pistas textuales', desc:'Palabras o frases que nos ayudan a inferir significados.' }
+    ],
+    levels: [
+      {
+        mission: '🔍 Misión 1: La pista directa',
+        fragment: '"El cielo se tornó gris, el viento comenzó a soplar con fuerza y las hojas cayeron en remolinos. Los peatones apresuraron el paso y buscaron refugio bajo los aleros."',
+        hint: '💡 Pista: ¿Qué situación meteorológica describen estas señales?',
+        question: '¿Qué se puede INFERIR que va a ocurrir?',
+        options: ['Va a hacer mucho calor', 'Va a llover o habrá tormenta', 'El sol saldrá pronto', 'Habrá un terremoto'],
+        correct: 1,
+        explanation: '¡Detective brillante! El cielo gris, el viento fuerte y la gente buscando refugio son pistas que permiten inferir que se aproxima lluvia o tormenta, aunque el texto no lo dice directamente.',
+        remember: 'Las pistas contextuales (descripciones del ambiente) nos ayudan a inferir.',
+        goal: 'Realizar inferencias a partir de descripciones contextuales'
+      },
+      {
+        mission: '🔍 Misión 2: El personaje secreto',
+        fragment: '"Entró al salón con pasos silenciosos. Llevaba una bata blanca y un estetoscopio al cuello. Se acercó a la cama, revisó la ficha colgada al pie y preguntó: ¿Cómo te has sentido hoy?"',
+        hint: '💡 Pista: Los objetos que porta el personaje son pistas de su profesión.',
+        question: '¿Qué profesión tiene el personaje que aparece en el texto?',
+        options: ['Cocinero', 'Maestro', 'Médico o enfermero/a', 'Policía'],
+        correct: 2,
+        explanation: '¡Correcto! La bata blanca, el estetoscopio y la ficha médica son pistas claras que permiten inferir que el personaje es médico o enfermero/a, aunque el texto no lo menciona.',
+        remember: 'Los objetos y acciones de un personaje revelan su identidad o profesión.',
+        goal: 'Inferir la identidad de un personaje por sus acciones y objetos'
+      },
+      {
+        mission: '🔍 Misión 3: El sentimiento oculto',
+        fragment: '"Cuando le dieron la noticia, Miguel no dijo nada. Solo se levantó, fue hasta la ventana y estuvo allí mucho tiempo mirando la lluvia. Nadie se atrevió a hablarle en toda la tarde."',
+        hint: '💡 Pista: Las acciones de Miguel y el comportamiento de los demás revelan su estado emocional.',
+        question: '¿Qué sentimiento experimenta probablemente Miguel?',
+        options: ['Alegría intensa', 'Aburrimiento', 'Dolor profundo o tristeza', 'Sorpresa agradable'],
+        correct: 2,
+        explanation: 'Excelente inferencia. El silencio, el aislamiento y la actitud de los demás de no atreverse a hablarle son señales claras de dolor o tristeza profunda. El texto no lo dice, pero lo comunica con fuerza.',
+        remember: 'Las acciones y el silencio también comunican emociones.',
+        goal: 'Inferir el estado emocional de un personaje'
+      },
+      {
+        mission: '🔍 Misión 4: La idea principal',
+        fragment: '"Los océanos cubren el 71% de la Tierra. Son el hogar de millones de especies. Regulan el clima del planeta y producen más del 50% del oxígeno que respiramos. Sin embargo, cada año toneladas de plástico llegan al mar."',
+        hint: '💡 Pista: ¿Cuál es el mensaje central que el texto quiere transmitir?',
+        question: '¿Cuál es la idea principal de este texto?',
+        options: ['Los océanos son grandes y cubren mucha tierra', 'Los océanos son fundamentales para la vida y están en peligro', 'El plástico contamina el océano', 'Los peces viven en el océano'],
+        correct: 1,
+        explanation: 'Muy bien. La idea principal integra toda la información: los océanos son vitales para la vida en la Tierra (porque regulan el clima, producen oxígeno, albergan especies) pero están amenazados por la contaminación.',
+        remember: 'La idea principal no es solo un detalle: es el mensaje global del texto.',
+        goal: 'Identificar la idea principal de un texto informativo'
+      },
+      {
+        mission: '🔍 Misión 5: El título perfecto',
+        fragment: '"Muchos estudiantes revisan sus redes sociales mientras estudian. Investigaciones demuestran que esto reduce la capacidad de concentración hasta un 40%. Para aprender mejor, es recomendable estudiar sin interrupciones digitales."',
+        hint: '💡 Pista: El título debe resumir el tema y el mensaje del texto.',
+        question: '¿Cuál es el título más adecuado para este texto?',
+        options: ['Las redes sociales son divertidas', 'El celular tiene muchas funciones', 'Las redes sociales afectan el rendimiento académico', 'Los estudiantes son perezosos'],
+        correct: 2,
+        explanation: '¡Perfecto! El título debe capturar la idea central: el impacto negativo de las redes sociales en el rendimiento académico. Las otras opciones son parciales o incorrectas.',
+        remember: 'Un buen título resume el tema Y la postura o mensaje del texto.',
+        goal: 'Seleccionar el título más adecuado para un texto'
+      }
+    ]
+  },
+  {
+    id: 4,
+    icon: '🎭',
+    name: 'Castillo de Bowser',
+    tag: 'WORLD 5-1',
+    theme: 'Protagonistas, antagonistas y secundarios',
+    color: '#c8a87a',
+    gradStart: '#1a1200',
+    gradEnd: '#0d0d1a',
+    grad: 'rgba(200,168,122,0.12)',
+    lessonTitle: 'El Universo de los Personajes',
+    lessonIntro: 'Los personajes son el alma de toda historia. Aprender a clasificarlos y analizarlos te permite comprender mejor la narrativa y sus conflictos.',
+    keyLabel: 'CLAVE DIDÁCTICA',
+    keyText: 'Los personajes se clasifican por su importancia (protagonista, secundario, episódico) y por su función en el conflicto (antagonista vs. protagonista). También se describen por su caracterización: rasgos físicos, psicológicos y sociales.',
+    concepts: [
+      { icon:'⭐', name:'Protagonista', desc:'El personaje principal. La historia gira en torno a él. Enfrenta el conflicto central.' },
+      { icon:'😈', name:'Antagonista', desc:'El personaje que se opone al protagonista. Puede ser una persona, fuerza o idea.' },
+      { icon:'👥', name:'Secundarios', desc:'Acompañan al protagonista y enriquecen la historia sin ser el centro.' },
+      { icon:'💫', name:'Caracterización', desc:'Describir a un personaje por sus rasgos físicos, psicológicos y sociales.' }
+    ],
+    levels: [
+      {
+        mission: '🎭 Misión 1: El personaje central',
+        fragment: '"En el relato, es Valentina quien vive todas las aventuras: ella descubre el mapa, enfrenta los peligros y toma las decisiones importantes. Su amigo Tomás la acompaña y le da consejos, pero Valentina es siempre quien actúa."',
+        hint: '💡 Pista: El protagonista es quien realiza las acciones principales y enfrenta el conflicto.',
+        question: '¿Quién es el personaje protagonista en esta historia?',
+        options: ['Tomás, porque da consejos', 'Valentina, porque realiza las acciones principales', 'Los dos por igual', 'El narrador de la historia'],
+        correct: 1,
+        explanation: '¡Correcto! Valentina es la protagonista porque descubre el mapa, enfrenta los peligros y toma las decisiones. Tomás es un personaje secundario que la apoya.',
+        remember: 'El protagonista es quien enfrenta el conflicto principal de la historia.',
+        goal: 'Identificar al personaje protagonista'
+      },
+      {
+        mission: '🎭 Misión 2: El obstáculo',
+        fragment: '"El villano de la novela es el conde Marcello, quien destruye los sueños de los aldeanos, roba sus cosechas y amenaza con expulsarlos si no le obedecen. El joven Rodrigo decide enfrentarlo."',
+        hint: '💡 Pista: El antagonista es quien se opone al protagonista y genera el conflicto.',
+        question: '¿Quién es el antagonista y por qué?',
+        options: ['Rodrigo, porque es joven y valiente', 'Los aldeanos, porque son víctimas', 'El conde Marcello, porque se opone al protagonista y genera conflicto', 'El narrador, porque cuenta la historia'],
+        correct: 2,
+        explanation: 'Muy bien. El conde Marcello es el antagonista porque se opone activamente al bienestar de los personajes y genera el conflicto central que el protagonista (Rodrigo) debe resolver.',
+        remember: 'El antagonista no siempre es un villano: puede ser una fuerza natural, una idea o una circunstancia.',
+        goal: 'Identificar el antagonista y comprender su función'
+      },
+      {
+        mission: '🎭 Misión 3: Los que apoyan',
+        fragment: '"En el camino, Sofía encontró a don Aurelio, un anciano sabio que le mostró el sendero correcto. También estaba Lina, su mejor amiga, quien la animaba en los momentos difíciles. Ninguno vivía las aventuras en su lugar."',
+        hint: '💡 Pista: Son importantes para la historia, pero no son el personaje principal.',
+        question: '¿Qué tipo de personajes son don Aurelio y Lina?',
+        options: ['Protagonistas', 'Antagonistas', 'Personajes secundarios', 'Narradores'],
+        correct: 2,
+        explanation: '¡Exacto! Son personajes secundarios porque acompañan y apoyan a la protagonista, enriquecen la historia, pero no son el centro de la trama ni enfrentan el conflicto principal.',
+        remember: 'Los personajes secundarios tienen funciones específicas: guía, apoyo emocional, información.',
+        goal: 'Clasificar correctamente los personajes secundarios'
+      },
+      {
+        mission: '🎭 Misión 4: Caracterización física',
+        fragment: '"Marcos era alto, de espaldas anchas y caminar pausado. Tenía una cicatriz en la mejilla izquierda y el cabello siempre despeinado. Sus manos callosas hablaban de años de trabajo duro."',
+        hint: '💡 Pista: ¿Qué tipo de rasgos describe este párrafo sobre el personaje?',
+        question: '¿Qué tipo de caracterización del personaje se presenta en este fragmento?',
+        options: ['Caracterización psicológica (sentimientos)', 'Caracterización social (relaciones)', 'Caracterización física (aspecto externo)', 'Caracterización moral (valores)'],
+        correct: 2,
+        explanation: 'Correcto. La descripción de la altura, la cicatriz, el cabello y las manos corresponde a la caracterización física: describe el aspecto exterior del personaje.',
+        remember: 'Hay tres tipos de caracterización: física, psicológica y social.',
+        goal: 'Distinguir tipos de caracterización de personajes'
+      },
+      {
+        mission: '🎭 Misión 5: El perfil completo',
+        fragment: '"Elena era tímida e insegura (nunca levantaba la mano en clase). Vivía con su abuela en un apartamento pequeño. Sin embargo, cuando alguien necesitaba ayuda, era la primera en aparecer, valiente y decidida."',
+        hint: '💡 Pista: El texto mezcla varios tipos de información sobre el personaje.',
+        question: '¿Cuál de los siguientes aspectos NO se menciona sobre Elena en el fragmento?',
+        options: ['Sus rasgos psicológicos (timidez, inseguridad)', 'Su situación familiar y social', 'Su apariencia física', 'Su valentía en situaciones de ayuda'],
+        correct: 2,
+        explanation: '¡Muy observador/a! El texto describe la personalidad (tímida, insegura, valiente), la situación social (vive con su abuela) y sus acciones, pero no describe su aspecto físico en ningún momento.',
+        remember: 'No todos los textos dan los mismos tipos de información sobre los personajes.',
+        goal: 'Analizar la caracterización completa de un personaje'
+      }
+    ]
+  },
+  {
+    id: 5,
+    icon: '🌟',
+    name: 'Estrella de Poder',
+    tag: 'WORLD 6-1',
+    theme: 'Metáfora, símil, hipérbole y personificación',
+    color: '#a8a8a8',
+    gradStart: '#1a1a1a',
+    gradEnd: '#0d0d1a',
+    grad: 'rgba(168,168,168,0.1)',
+    lessonTitle: 'El Lenguaje Figurado',
+    lessonIntro: 'Los escritores usan figuras literarias para hacer el lenguaje más bello, expresivo e impactante. Reconocerlas es clave para analizar cualquier texto literario.',
+    keyLabel: 'CLAVE DIDÁCTICA',
+    keyText: 'Una figura literaria (o retórica) es un uso especial y creativo del lenguaje que se aparta del uso común para lograr efectos expresivos. Las más importantes son: metáfora, símil (comparación), hipérbole y personificación.',
+    concepts: [
+      { icon:'🌹', name:'Metáfora', desc:'Identifica dos cosas sin usar "como": "Tus ojos son luceros". Una cosa SE CONVIERTE en otra.' },
+      { icon:'🔗', name:'Símil', desc:'Compara dos cosas usando "como", "parece" o "similar a": "Corre como el viento".' },
+      { icon:'📣', name:'Hipérbole', desc:'Exagera la realidad para enfatizar: "Te lo he dicho un millón de veces".' },
+      { icon:'🌸', name:'Personificación', desc:'Da cualidades humanas a animales, objetos o ideas: "El viento susurraba secretos".' }
+    ],
+    levels: [
+      {
+        mission: '✨ Misión 1: La metáfora',
+        fragment: '"Sus palabras eran cuchillos que herían cada vez que hablaba. Su mirada, un océano profundo e insondable."',
+        hint: '💡 Pista: ¿Se usan palabras como "como" o "parece"? No. Entonces no es comparación...',
+        question: '¿Qué figura literaria predomina en este fragmento?',
+        options: ['Símil (comparación)', 'Hipérbole (exageración)', 'Metáfora (identificación directa)', 'Personificación'],
+        correct: 2,
+        explanation: '¡Brillante! Son metáforas: "palabras = cuchillos" y "mirada = océano" identifican directamente una cosa con otra sin usar "como". La metáfora es más intensa que el símil.',
+        remember: 'Metáfora: A ES B. Símil: A es COMO B. La diferencia está en esa pequeña palabra.',
+        goal: 'Identificar y comprender la metáfora'
+      },
+      {
+        mission: '✨ Misión 2: La comparación',
+        fragment: '"El atleta corría como una gacela por la pista. Sus piernas se movían similares a los pistones de una máquina perfecta."',
+        hint: '💡 Pista: Busca las palabras que conectan las dos cosas comparadas.',
+        question: '¿Qué figura literaria se usa en este fragmento?',
+        options: ['Metáfora', 'Personificación', 'Hipérbole', 'Símil o comparación'],
+        correct: 3,
+        explanation: 'Correcto. El símil o comparación usa nexos como "como" o "similar a" para relacionar dos elementos: el atleta y la gacela, y las piernas y los pistones.',
+        remember: 'Las palabras "como", "parece", "similar a", "tal como" son señales de un símil.',
+        goal: 'Reconocer el símil y sus nexos comparativos'
+      },
+      {
+        mission: '✨ Misión 3: La exageración',
+        fragment: '"¡Te he esperado toda una eternidad! ¡Tengo tanta hambre que me podría comer un elefante! ¡He caminado mil kilómetros para verte!"',
+        hint: '💡 Pista: ¿Son posibles literalmente estas afirmaciones? ¿O son exageraciones?',
+        question: '¿Qué figura literaria contiene este fragmento?',
+        options: ['Metáfora directa', 'Símil con nexos', 'Hipérbole o exageración', 'Personificación de objetos'],
+        correct: 2,
+        explanation: '¡Muy bien! La hipérbole consiste en una exageración evidente que no debe tomarse al pie de la letra. Nadie espera "una eternidad" ni camina "mil kilómetros" literalmente.',
+        remember: 'La hipérbole exagera para dar énfasis emocional, no para decir mentiras.',
+        goal: 'Identificar y comprender la hipérbole'
+      },
+      {
+        mission: '✨ Misión 4: Los objetos hablan',
+        fragment: '"El reloj viejo suspiró en el rincón. Las flores del jardín se inclinaron para escuchar la historia. El río cantaba alegremente su canción entre las piedras."',
+        hint: '💡 Pista: Los objetos o elementos de la naturaleza hacen acciones humanas.',
+        question: '¿Qué figura literaria se utiliza repetidamente en este texto?',
+        options: ['Hipérbole', 'Símil', 'Metáfora pura', 'Personificación o prosopopeya'],
+        correct: 3,
+        explanation: '¡Perfecto! La personificación (también llamada prosopopeya) da cualidades o acciones humanas a seres no humanos: el reloj "suspira", las flores "escuchan", el río "canta".',
+        remember: 'Personificación = dar acciones, sentimientos o cualidades humanas a seres no humanos.',
+        goal: 'Reconocer la personificación y su efecto expresivo'
+      },
+      {
+        mission: '✨ Misión 5: El gran análisis',
+        fragment: '"Sus ojos eran estrellas brillando en la noche. Corrió hacia mí como una flecha disparada. Mi corazón latió un millón de veces en ese momento."',
+        hint: '💡 Pista: Hay tres oraciones y posiblemente cada una usa una figura diferente.',
+        question: '¿Cuál es el orden correcto de las figuras en las tres oraciones?',
+        options: ['Símil - Metáfora - Hipérbole', 'Hipérbole - Símil - Metáfora', 'Personificación - Símil - Hipérbole', 'Metáfora - Símil - Hipérbole'],
+        correct: 3,
+        explanation: '¡Analista literario experto! Oración 1: "sus ojos ERAN estrellas" = metáfora (no usa "como"). Oración 2: "corrió COMO una flecha" = símil (usa "como"). Oración 3: "un millón de veces" = hipérbole (exageración).',
+        remember: 'Un texto puede combinar varias figuras literarias. Analiza cada parte por separado.',
+        goal: 'Analizar y clasificar múltiples figuras literarias en un texto'
+      }
+    ]
+  }
+];
+
+// =====================================================
+// GAME STATE
+// =====================================================
+let state = {
+  currentWorld: null,
+  currentLevel: 0,
+  score: 0,
+  lives: 3,
+  soundOn: true,
+  answered: false,
+  timerInterval: null,
+  timerSec: 25,
+  timerMax: 25,
+  totalLevelsCompleted: 0
+};
+
+// =====================================================
+// AUDIO (Web Audio API)
+// =====================================================
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, dur, type='sine', vol=0.15) {
+  if (!state.soundOn) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function playSuccess() {
+  playTone(523,0.12,'square',0.12);
+  setTimeout(()=>playTone(659,0.12,'square',0.12),120);
+  setTimeout(()=>playTone(784,0.12,'square',0.12),240);
+  setTimeout(()=>playTone(1047,0.3,'square',0.1),360);
+}
+function playError() {
+  playTone(220,0.15,'sawtooth',0.12);
+  setTimeout(()=>playTone(180,0.3,'sawtooth',0.1),150);
+}
+function playClick() { playTone(440,0.08,'sine',0.1); }
+function playStart() {
+  [261,329,392,523].forEach((f,i)=>setTimeout(()=>playTone(f,0.15,'square',0.1),i*100));
+}
+function playAlert() {
+  playTone(880,0.1,'square',0.08);
+  setTimeout(()=>playTone(880,0.1,'square',0.08),200);
+}
+
+// =====================================================
+// FLOATING BG
+// =====================================================
+const BG_ICONS = ['📚','📜','✨','🎭','🖋️','📖','🌟','⭐','🗺️','🔍','💫','🎵','📝','🌹'];
+function buildFloatingBg() {
+  const cont = document.getElementById('bg-float');
+  for (let i=0; i<22; i++) {
+    const el = document.createElement('div');
+    el.className = 'float-icon';
+    el.textContent = BG_ICONS[Math.floor(Math.random()*BG_ICONS.length)];
+    el.style.left = Math.random()*100 + '%';
+    el.style.fontSize = (1.2+Math.random()*2)+'rem';
+    el.style.animationDuration = (12+Math.random()*20)+'s';
+    el.style.animationDelay = (Math.random()*18)+'s';
+    cont.appendChild(el);
+  }
+}
+
+// =====================================================
+// WORLD CARDS (Start Screen)
+// =====================================================
+function buildWorldCards() {
+  const grid = document.getElementById('worlds-grid');
+  WORLDS.forEach((w,i)=>{
+    const card = document.createElement('div');
+    card.className = 'world-card';
+    card.style.setProperty('--wc-color', w.color);
+    card.style.setProperty('--wc-grad', `linear-gradient(135deg, ${w.color}18, transparent)`);
+    card.innerHTML = `
+      <span class="wc-icon">${w.icon}</span>
+      <span class="wc-num pixelart">${w.tag}</span>
+      <h3>${w.name}</h3>
+      <p>${w.theme}</p>
+      <div class="wc-stars" id="stars-${i}">— — —</div>
+    `;
+    card.onclick = () => openLesson(i);
+    grid.appendChild(card);
+  });
+}
+
+function updateStars() {
+  // Placeholder: could track per-world score
+}
+
+// =====================================================
+// SCREENS
+// =====================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showStart() {
+  stopTimer();
+  updateHUD();
+  showScreen('screen-start');
+}
+
+// =====================================================
+// LESSON SCREEN
+// =====================================================
+function openLesson(worldIdx) {
+  playClick();
+  state.currentWorld = worldIdx;
+  state.currentLevel = 0;
+  const w = WORLDS[worldIdx];
+
+  document.getElementById('screen-lesson').style.setProperty('--lesson-bg1', w.gradStart);
+
+  document.getElementById('lesson-header').innerHTML = `
+    <span class="big-icon">${w.icon}</span>
+    <h2>${w.lessonTitle}</h2>
+    <p>${w.lessonIntro}</p>
+    <span class="theme-tag">${w.tag} · ${w.theme}</span>
+  `;
+  document.getElementById('lesson-key').innerHTML = `
+    <div class="key-label">${w.keyLabel}</div>
+    <p>${w.keyText}</p>
+  `;
+  const lc = document.getElementById('lesson-cards');
+  lc.innerHTML = '';
+  w.concepts.forEach(c=>{
+    const d = document.createElement('div');
+    d.className = 'lesson-concept';
+    d.innerHTML = `<span class="con-icon">${c.icon}</span><strong>${c.name}</strong><span>${c.desc}</span>`;
+    lc.appendChild(d);
+  });
+  showScreen('screen-lesson');
+}
+
+// =====================================================
+// GAME START
+// =====================================================
+function startGame() {
+  playStart();
+  state.currentLevel = 0;
+  renderLevel();
+  showScreen('screen-game');
+}
+
+// =====================================================
+// RENDER LEVEL
+// =====================================================
+function renderLevel() {
+  const w = WORLDS[state.currentWorld];
+  const lv = w.levels[state.currentLevel];
+  if (!lv) { showEnd(true); return; }
+
+  state.answered = false;
+
+  // topbar
+  document.getElementById('game-world-label').textContent = w.icon + ' ' + w.name;
+  document.getElementById('chip-level').textContent = `⭐ ${state.currentLevel+1}/${w.levels.length}`;
+  document.getElementById('chip-score').textContent = `🪙 ${state.score}`;
+  updateLivesChip();
+
+  // progress
+  const pct = (state.currentLevel / w.levels.length)*100;
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-text').textContent = `${state.currentLevel} / ${w.levels.length}`;
+
+  // game bg color
+  document.getElementById('screen-game').style.setProperty('--game-bg1', w.gradStart);
+
+  // card content
+  const card = document.getElementById('game-card');
+  const opts = lv.options.map((o,i)=>`<button class="opt-btn" id="opt-${i}" onclick="selectOption(${i})">${String.fromCharCode(65+i)}) ${o}</button>`).join('');
+  card.innerHTML = `
+    <div class="goal-tag">🎯 ${lv.goal}</div>
+    <div class="mission-tag">${lv.mission}</div>
+    <div class="fragment-box">${lv.fragment}</div>
+    <div class="hint-box"><span class="hint-icon">💡</span><span>${lv.hint}</span></div>
+    <p class="question-text">${lv.question}</p>
+    <div class="options-grid">${opts}</div>
+    <div class="remember-box" id="remember-box" style="display:none">📌 ${lv.remember}</div>
+  `;
+  card.style.animation = 'none';
+  requestAnimationFrame(()=>{ card.style.animation = 'fadeUp 0.5s ease'; });
+
+  startTimer();
+}
+
+// =====================================================
+// TIMER
+// =====================================================
+function startTimer() {
+  stopTimer();
+  state.timerSec = state.timerMax;
+  updateTimerUI();
+  state.timerInterval = setInterval(()=>{
+    state.timerSec--;
+    updateTimerUI();
+    if (state.timerSec <= 5) playAlert();
+    if (state.timerSec <= 0) { timeUp(); }
+  }, 1000);
+}
+function stopTimer() { if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
+function updateTimerUI() {
+  const pct = (state.timerSec / state.timerMax)*100;
+  const fill = document.getElementById('timer-fill');
+  fill.style.width = pct+'%';
+  fill.style.background = state.timerSec > 10 ? '#39ff14' : state.timerSec > 5 ? '#ff6a00' : '#ff2d55';
+  document.getElementById('timer-label').textContent = `⏱ ${state.timerSec}s`;
+}
+function timeUp() {
+  if (state.answered) return;
+  stopTimer();
+  state.answered = true;
+  loseLife();
+  const lv = WORLDS[state.currentWorld].levels[state.currentLevel];
+  showFeedback(false, '⏰ ¡Se acabó el tiempo!', lv.explanation, lv.remember, true);
+}
+
+// =====================================================
+// ANSWER LOGIC
+// =====================================================
+function selectOption(idx) {
+  if (state.answered) return;
+  playClick();
+  state.answered = true;
+  stopTimer();
+
+  const lv = WORLDS[state.currentWorld].levels[state.currentLevel];
+  const isCorrect = idx === lv.correct;
+
+  // highlight buttons
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    b.disabled = true;
+    if (i === lv.correct) b.classList.add('correct');
+    else if (i === idx) b.classList.add('wrong');
+  });
+  document.getElementById('remember-box').style.display = 'block';
+
+  if (isCorrect) {
+    playSuccess();
+    state.score += 100 + state.timerSec * 5;
+    spawnConfetti();
+    document.getElementById('chip-score').textContent = `🪙 ${state.score}`;
+    showFeedback(true, '¡Correcto! 🌟', lv.explanation, lv.remember, false);
+  } else {
+    playError();
+    loseLife();
+    showFeedback(false, '¡Casi! 🍄', lv.explanation, lv.remember, false);
+  }
+  updateHUD();
+}
+
+function loseLife() {
+  state.lives = Math.max(0, state.lives - 1);
+  updateLivesChip();
+  updateHUD();
+  if (state.lives <= 0) {
+    setTimeout(()=>{ closeFeedback(); showEnd(false); }, 2000);
+  }
+}
+
+function updateLivesChip() {
+  const hearts = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0,3-state.lives));
+  const chip = document.getElementById('chip-lives');
+  if (chip) chip.textContent = hearts;
+}
+
+// =====================================================
+// FEEDBACK MODAL
+// =====================================================
+function showFeedback(correct, title, exp, remember, isTimeout) {
+  document.getElementById('modal-icon').textContent = correct ? '⭐' : (isTimeout ? '⏰' : '🍄');
+  const t = document.getElementById('modal-title');
+  t.textContent = title;
+  t.className = correct ? 'modal-correct' : 'modal-wrong';
+  document.getElementById('modal-exp').textContent = exp;
+  document.getElementById('modal-remember').textContent = '📌 ' + remember;
+  document.getElementById('btn-next-level').style.display = (state.lives > 0) ? 'inline-block' : 'none';
+  document.getElementById('btn-retry').style.display = (!correct && state.lives > 0) ? 'inline-block' : 'none';
+  document.getElementById('modal-feedback').classList.add('open');
+}
+function closeFeedback() {
+  document.getElementById('modal-feedback').classList.remove('open');
+}
+function nextLevel() {
+  closeFeedback();
+  if (state.lives <= 0) { showEnd(false); return; }
+  state.currentLevel++;
+  state.totalLevelsCompleted++;
+  const w = WORLDS[state.currentWorld];
+  if (state.currentLevel >= w.levels.length) {
+    showEnd(true);
+  } else {
+    renderLevel();
+  }
+}
+function retryLevel() {
+  closeFeedback();
+  renderLevel();
+}
+
+// =====================================================
+// END SCREEN
+// =====================================================
+function showEnd(won) {
+  stopTimer();
+  const w = WORLDS[state.currentWorld];
+  document.getElementById('end-icon').textContent = won ? '🏆' : '💔';
+  document.getElementById('end-title').textContent = won ? '¡Mundo completado!' : 'GAME OVER...';
+  document.getElementById('end-msg').textContent = won
+    ? `¡Increíble, jugador! ¡Salvaste el ${w.name}! Eres un héroe literario 🍄⭐`
+    : `Bowser fue demasiado en ${w.name}. ¡Recoge una moneda y vuelve a intentarlo! 🪙`;
+  document.getElementById('end-score').textContent = state.score;
+  document.getElementById('end-levels').textContent = `${Math.min(state.currentLevel, w.levels.length)}/${w.levels.length}`;
+  const stars = state.score >= 400 ? '⭐⭐⭐' : state.score >= 200 ? '⭐⭐' : '⭐';
+  document.getElementById('end-star').textContent = stars;
+  if (won) spawnConfetti(80);
+  showScreen('screen-end');
+  updateHUD();
+}
+function replayWorld() {
+  state.lives = 3;
+  state.currentLevel = 0;
+  state.score = 0;
+  renderLevel();
+  showScreen('screen-game');
+}
+
+// =====================================================
+// HUD UPDATE
+// =====================================================
+function updateHUD() {
+  document.getElementById('hud-score').textContent = `🪙 MONEDAS: ${state.score}`;
+  const hearts = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0,3-state.lives));
+  document.getElementById('hud-lives').textContent = `${hearts}  VIDAS: ${state.lives}`;
+  if (state.currentWorld !== null) {
+    document.getElementById('hud-world').textContent = `🗺️ MUNDO: ${WORLDS[state.currentWorld].name}`;
+  }
+}
+
+// =====================================================
+// SOUND TOGGLE
+// =====================================================
+function toggleSound() {
+  state.soundOn = !state.soundOn;
+  document.getElementById('btn-sound-main').textContent = `${state.soundOn ? '🔊' : '🔇'} Sonido: ${state.soundOn ? 'ON' : 'OFF'}`;
+  if (state.soundOn) playClick();
+}
+
+// =====================================================
+// CONFETTI
+// =====================================================
+const CONF_COLORS = ['#ffe600','#ff00c8','#00f5ff','#39ff14','#bf00ff','#ff6a00','#ffffff'];
+function spawnConfetti(count=40) {
+  const cont = document.getElementById('confetti-container');
+  for (let i=0; i<count; i++) {
+    const el = document.createElement('div');
+    el.className = 'conf';
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.top = '-10px';
+    el.style.background = CONF_COLORS[Math.floor(Math.random()*CONF_COLORS.length)];
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.animationDelay = Math.random()*0.5+'s';
+    el.style.animationDuration = (0.8+Math.random()*0.6)+'s';
+    el.style.width = el.style.height = (6+Math.random()*8)+'px';
+    cont.appendChild(el);
+    setTimeout(()=>el.remove(), 1800);
+  }
+}
+
+// =====================================================
+// MARIO ANIMATION
+// =====================================================
+const MARIO_SEQ = ['🍄⭐🪙🌟','🌟🍄⭐🪙','🪙🌟🍄⭐','⭐🪙🌟🍄'];
+let marioFrame = 0;
+setInterval(()=>{
+  marioFrame = (marioFrame+1)%MARIO_SEQ.length;
+  const el = document.getElementById('mario-walk');
+  if (el) el.textContent = MARIO_SEQ[marioFrame];
+}, 600);
+
+// =====================================================
+// INIT
+// =====================================================
+buildFloatingBg();
+buildWorldCards();
+updateHUD();
+</script>
+<iframe
+  src="https://agent.jotform.com/019ddaa201aa7199a7b90df3141c896f269e"
+  width="100%"
+  height="700"
+  frameborder="0"
+  style="border:none; border-radius:20px;">
+</iframe>
+</body>
+</html>
